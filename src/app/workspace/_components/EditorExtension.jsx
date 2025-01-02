@@ -35,6 +35,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { saveAs } from "file-saver";
+import { jsPDF } from "jspdf";
+import { Document, Packer, Paragraph } from "docx";
+
 function EditorExtension({ editor }) {
   const { fileId } = useParams();
   const saveNotes = useMutation(api.notes.addNotes);
@@ -43,13 +47,14 @@ function EditorExtension({ editor }) {
 
   const searchAiPdf = useAction(api.myActions.search);
 
-  const selectedText = editor?.state.doc.textBetween(
-    editor?.state.selection.from,
-    editor?.state.selection.to
-  );
   // from pdf
   const handelAiPdf = async () => {
     toast("Getting answer from PDF.");
+    const selectedText = editor?.state.doc.textBetween(
+      editor?.state.selection.from,
+      editor?.state.selection.to
+    );
+    // console.log("selectedText", selectedText);
 
     const result = await searchAiPdf({ query: selectedText, fileId });
     // console.log("unformatted answer", result);
@@ -188,6 +193,32 @@ Answer:
       // console.log(error);
     }
   };
+
+  // Functions for PDF
+  const downloadAsPdf = (content) => {
+    const pdf = new jsPDF();
+    pdf.html(content, {
+      callback: (doc) => {
+        doc.save("notes.pdf");
+      },
+    });
+  };
+
+  // Functions for Word download
+  const downloadAsWord = (content) => {
+    const doc = new Document({
+      sections: [
+        {
+          children: [new Paragraph(content)],
+        },
+      ],
+    });
+
+    Packer.toBlob(doc).then((blob) => {
+      saveAs(blob, "note.docx");
+    });
+  };
+
   return (
     <div className="m-4">
       <div className="control-group">
@@ -304,7 +335,6 @@ Answer:
           {/* save button */}
           <Button className="rounded-full">
             <div onClick={handelSaveNotes}> Save</div>
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button>
@@ -315,13 +345,23 @@ Answer:
                 <DropdownMenuLabel>Download</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      const content = editor?.getHTML(); // HTML content for PDF
+                      downloadAsPdf(content);
+                    }}
+                  >
                     PDF
                     <DropdownMenuShortcut>
                       <File />
                     </DropdownMenuShortcut>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      const content = editor?.getText(); // Plain text for Word
+                      downloadAsWord(content);
+                    }}
+                  >
                     Word
                     <DropdownMenuShortcut>
                       <FileText />
@@ -331,6 +371,9 @@ Answer:
               </DropdownMenuContent>
             </DropdownMenu>
           </Button>
+          {/* end save button */}
+
+          {/* characters and words */}
           <div className="text-sm">
             {editor?.storage?.characterCount?.characters()} characters
             <br />

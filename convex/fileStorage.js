@@ -110,7 +110,18 @@ export const deleteFile = mutation({
     // Fetch all documents associated with the fileId in metadata
     const documents = await ctx.db
       .query("documents")
-      .filter((q) => q.eq(q.field("metadata"), args.fileId))
+      .filter((q) => {
+        // console.log(
+        //   "documents\n",
+        //   q.eq(q.field("metadata"), {
+        //     fileId: "e00d91e9db021d3b3445e6c1cbed7849",
+        //   })
+        // );
+
+        return q.eq(q.field("metadata"), {
+          fileId: args.fileId,
+        });
+      })
       .collect();
 
     // console.log("Documents to delete:", documents);

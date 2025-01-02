@@ -109,7 +109,7 @@ function UploadPdfDialog({ children, isMaxFile }) {
         storageId,
         createdBy: user?.primaryEmailAddress?.emailAddress,
       });
-      console.log("Inserted new file data:", respo);
+      // console.log("Inserted new file data:", respo);
       toast("File uploaded successfully and processing started ....");
 
       // step4: embed the file
@@ -122,7 +122,7 @@ function UploadPdfDialog({ children, isMaxFile }) {
 
       const embededResult = await embededDocument({
         splitedText: data.result,
-        fileId: data.fileId,
+        fileId: { fileId: data.fileId },
       });
       // console.log("embededResult", embededResult);
       toast("All done ....");
